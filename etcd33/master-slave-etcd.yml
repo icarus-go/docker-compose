@@ -1,0 +1,113 @@
+version: '3.9'
+services:
+  etcdOne:
+    ports:
+      - '2379:2379'
+      - '2380:2380'
+    environment:
+      ETCDCTL_API: 3
+    image: quay.io/coreos/etcd
+    container_name: etcdOne
+    command:
+      - "/usr/local/bin/etcd"
+      - "--name"
+      - "etcd"
+      - "--data-dir"
+      - "/etcd-data"
+      - "--listen-client-urls"
+      - "http://0.0.0.0:2379"
+      - "--advertise-client-urls"
+      - "http://0.0.0.0:2379"
+      - "--listen-peer-urls"
+      - "http://0.0.0.0:2380"
+      - "--initial-advertise-peer-urls"
+      - "http://etcdOne:2380"
+      - "--initial-cluster-token"
+      - "tkn"
+      - "--initial-cluster-state"
+      - "new"
+      - "--initial-cluster"
+      - "etcd=http://etcdOne:2380,etcd2=http://etcdTwo:2380,etcd3=http://etcdThird:2380"
+    volumes:
+      - './etcdOne/data:/etcd_data'
+    networks:
+      - etcdHA
+
+  # second etcd service
+  etcdTwo:
+    ports:
+      - '12379:2379'
+      - '12380:2380'
+    image: quay.io/coreos/etcd
+    environment:
+      ETCDCTL_API: 3
+    container_name: etcdTwo
+    command:
+      - "/usr/local/bin/etcd"
+      - "--name"
+      - "etcd2"
+      - "--data-dir"
+      - "/etcd-data"
+      - "--listen-client-urls"
+      - "http://0.0.0.0:2379"
+      - "--advertise-client-urls"
+      - "http://0.0.0.0:2379"
+      - "--listen-peer-urls"
+      - "http://0.0.0.0:2380"
+      - "--initial-advertise-peer-urls"
+      - "http://etcdTwo:2380"
+      - "--initial-cluster-token"
+      - "tkn"
+      - "--initial-cluster-state"
+      - "new"
+      - "--initial-cluster"
+      - "etcd=http://etcdOne:2380,etcd2=http://etcdTwo:2380,etcd3=http://etcdThird:2380"
+    volumes:
+      - './etcdTwo/data:/etcd_data'
+    networks:
+      - etcdHA
+
+  # third etcd service
+  etcdThird:
+    ports:
+      - '22379:2379'
+      - '22380:2380'
+    image: quay.io/coreos/etcd
+    environment:
+      ETCDCTL_API: 3
+    container_name: etcdThird
+    command:
+      - "/usr/local/bin/etcd"
+      - "--name"
+      - "etcd3"
+      - "--data-dir"
+      - "/etcd-data"
+      - "--listen-client-urls"
+      - "http://0.0.0.0:2379"
+      - "--advertise-client-urls"
+      - "http://0.0.0.0:2379"
+      - "--listen-peer-urls"
+      - "http://0.0.0.0:2380"
+      - "--initial-advertise-peer-urls"
+      - "http://etcdThird:2380"
+      - "--initial-cluster-token"
+      - "tkn"
+      - "--initial-cluster-state"
+      - "new"
+      - "--initial-cluster"
+      - "etcd=http://etcdOne:2380,etcd2=http://etcdTwo:2380,etcd3=http://etcdThird:2380"
+    volumes:
+      - './etcdThird/data:/etcd_data'
+    networks:
+      - etcdHA
+  etcd-manage:
+    networks:
+      - etcdHA
+    image: "shiguanghuxian/etcd-manage"
+    volumes:
+      - ./conf/cfg.toml:/app/config/cfg.toml
+      - ./ui/logs:/app/logs
+    ports:
+      - "10280:10280"
+networks:
+  etcdHA:

@@ -1,0 +1,47 @@
+version: "3"
+
+networks:
+  dronenet:
+    name: dronenet
+    external: false
+
+services:
+  gitea:
+    image: gitea/gitea:latest
+    container_name: gitea
+    environment:
+      - USER_UID=888
+      - USER_GID=888
+      - DB_TYPE=postgres
+      - DB_HOST=gitea_postgres:5432
+      - DB_NAME=gitea
+      - DB_USER=gitea
+      - DB_PASSWD=gitea
+    restart: always
+    volumes:
+      - ./data:/data
+      - ./timezone:/etc/timezone:ro
+      - ./localtime:/etc/localtime:ro
+      - /home/git/.ssh/:/data/git/.ssh
+    ports:
+      - "10086:3000"
+      - "127.0.0.1:3022:22"
+    depends_on:
+      - gitea_postgres
+    networks:
+      dronenet:
+
+  gitea_postgres:
+    image: postgres:alpine
+    ports:
+      - "5432:5432"
+    restart: always
+    container_name: gitea_postgres
+    volumes:
+      - ./gitea_postgres/data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=gitea
+      - POSTGRES_PASSWORD=gitea
+      - POSTGRES_DB=gitea
+    networks:
+      dronenet:
